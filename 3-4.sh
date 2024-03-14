@@ -34,24 +34,17 @@ delete_group() {
 
 # Функция для вывода справочной информации
 show_help() {
-    echo "Usage: $0 [-d] <group>:<list-of-users> [<group>:<list-of-users> ...]"
     echo "Options:"
     echo "  -d    Delete specified groups instead of creating them."
     echo "  -help Display this help message."
     echo ""
     echo "Examples:"
     echo "  Create groups and add users:"
-    echo "    $0 group1:user1,user2 group2:user3,user4"
+    echo "    group1:user1,user2"
     echo ""
     echo "  Delete groups:"
-    echo "    $0 -d group1 group2"
+    echo "    group1,group2"
 }
-
-# Проверка наличия аргументов
-if [ $# -eq 0 ]; then
-    show_help
-    exit 1
-fi
 
 # Обработка атрибута -help
 if [ "$1" = "-help" ]; then
@@ -62,16 +55,23 @@ fi
 # Обработка опции "-d" для удаления групп
 if [ "$1" = "-d" ]; then
     shift
-    for arg; do
-        IFS=':' read -r group _ <<< "$arg"
+    # Считываем группы для удаления из стандартного ввода, разделенные запятыми
+    IFS=',' read -ra groups
+    # Перебираем группы и удаляем их
+    for group in "${groups[@]}"; do
         delete_group "$group"
     done
     exit 0
 fi
 
-# Обработка входных данных для создания групп
-for arg; do
-    IFS=':' read -r group users <<< "$arg"
+IFS=':'
+
+# Считывание данных из стандартного ввода
+while IFS= read -r arg; do
+    # Разделение строки на переменные group и users
+    read -r group users <<< "$arg"
+    # Вызов функции create_group с аргументами group и users
     create_group "$group" "$users"
+    exit 0
 done
 
